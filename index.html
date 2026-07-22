@@ -383,7 +383,7 @@
           <div class="ed-key"><h5>Position Key (21&ndash;30)</h5><div class="row" id="key2130"></div></div>
         </div>
         <div class="ed-kd"><label>KD tiers &nbsp; low &le; <input id="kd0" type="number" step="any"> &nbsp; mid &le; <input id="kd1" type="number" step="any"> &nbsp; else high</label></div>
-        <textarea class="ed-paste" id="kw-paste" placeholder="Paste rows here: Keyword [tab] Current Position [tab] Search Volume [tab] KD  — one keyword per line, up to 200. Tab- or comma-separated."></textarea>
+        <textarea class="ed-paste" id="kw-paste" placeholder="Paste rows here: Keyword [tab] Current Position [tab] Search Volume [tab] KD  — one keyword per line, up to 500. Tab- or comma-separated."></textarea>
         <div class="kw-btns">
           <button id="kw-load" class="ed-add">Load pasted rows</button>
           <button id="kw-add" class="ed-add">+ Add row</button>
@@ -841,7 +841,7 @@ function parsePaste(text){
     out.push({ kw:(parts[0]||"").trim(), pos:parseFloat(parts[1])||0, sv:parseFloat(parts[2])||0, kd:parseFloat(parts[3])||0 });
   });
   if(out.length && /keyword|target/i.test(out[0].kw) && !(out[0].sv>0)) out.shift();
-  return out.slice(0,200);
+  return out.slice(0,500);
 }
 function readEditor(){
   const gv=k=>{ const el=document.querySelector(`#ed-fields [data-k="${k}"]`); return el?el.value:""; };
@@ -904,7 +904,7 @@ function wireEditor(){
     status(rows.length+" keyword row"+(rows.length===1?"":"s")+" loaded.");
   });
   document.getElementById("kw-add").addEventListener("click",()=>{
-    if(kwtb.querySelectorAll("tr").length>=200){ status("200-row limit reached."); return; }
+    if(kwtb.querySelectorAll("tr").length>=500){ status("500-row limit reached."); return; }
     kwtb.insertAdjacentHTML("beforeend",kwRowHtml({})); applyFromEditor();
   });
   document.getElementById("kw-clear").addEventListener("click",()=>{ buildKeywordRows([]); applyFromEditor(); status("Keyword table cleared."); });
