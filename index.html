@@ -176,7 +176,7 @@
   .ed-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
   .ed-actions button{font:700 .85rem var(--sans);padding:11px 16px;border-radius:5px;cursor:pointer;border:1px solid transparent}
   .ed-actions #ed-apply{background:var(--obx-blue);color:#fff}
-  .ed-actions #ed-link,.ed-actions #ed-json,.ed-actions #ed-download{background:#fff;color:var(--obx-blue);border-color:#CBD5DE}
+  .ed-actions #ed-link,.ed-actions #ed-json,.ed-actions #ed-download,.ed-actions #ed-pdf{background:#fff;color:var(--obx-blue);border-color:#CBD5DE}
   .ed-actions #ed-reset{background:transparent;color:var(--grey);border-color:#CBD5DE}
   .ed-status{margin-top:14px;font-size:.85rem;font-weight:700;color:var(--obx-blue);min-height:1.2em}
 
@@ -223,6 +223,15 @@
     html{scroll-behavior:auto}
     .reveal{opacity:1;transform:none;transition:none}
     .draw{stroke-dasharray:none!important;stroke-dashoffset:0!important}
+  }
+  @media print{
+    @page{margin:14mm}
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .editor,.editor-toggle{display:none !important}
+    .reveal{opacity:1 !important;transform:none !important}
+    .draw{stroke-dashoffset:0 !important;animation:none !important}
+    details:not([open]) > *:not(summary){display:block !important}
+    .chart-card,.range-wrap,.method,.table-scroll{break-inside:avoid}
   }
 </style>
 </head>
@@ -426,6 +435,7 @@
       <button id="ed-link">Copy shareable link</button>
       <button id="ed-json">Copy config JSON</button>
       <button id="ed-download">Download standalone HTML</button>
+      <button id="ed-pdf">Save as PDF</button>
       <button id="ed-reset">Clear fields</button>
     </div>
     <p class="ed-status" id="ed-status" aria-live="polite"></p>
@@ -952,6 +962,14 @@ function wireEditor(){
     try{ console.log(JSON.stringify(currentRaw,null,2)); }catch(e){}
   });
   document.getElementById("ed-download").addEventListener("click",downloadStandalone);
+  document.getElementById("ed-pdf").addEventListener("click",()=>{
+    const dets=[...document.querySelectorAll("details")];
+    const prev=dets.map(d=>d.open); dets.forEach(d=>d.open=true);
+    const restore=()=>{ dets.forEach((d,i)=>d.open=prev[i]); window.removeEventListener("afterprint",restore); };
+    window.addEventListener("afterprint",restore);
+    status("Opening print dialog \u2014 choose \u201cSave as PDF\u201d.");
+    setTimeout(()=>window.print(),60);
+  });
   document.getElementById("ed-reset").addEventListener("click",()=>{
     const kw = currentRaw.keywords || DEFAULT_DATA.keywords, dk = DEFAULT_DATA.keywords;
     currentRaw = {
