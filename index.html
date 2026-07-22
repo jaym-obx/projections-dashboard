@@ -81,12 +81,13 @@
   .range-fig.high .amt{color:var(--orange)}
   .range-fig .note{font-size:.76rem;color:var(--slate);margin-top:.2rem}
   .range-figures.two{grid-template-columns:repeat(2,1fr)}
+  .range-figures.three{grid-template-columns:repeat(3,1fr)}
   .budget-slider{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:5px;background:#DCE4EB;outline:none;margin:6px 0 24px}
   .budget-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;background:var(--obx-blue);border:3px solid #fff;box-shadow:0 2px 7px rgba(0,0,0,.28);cursor:pointer}
   .budget-slider::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--obx-blue);border:3px solid #fff;box-shadow:0 2px 7px rgba(0,0,0,.28);cursor:pointer}
   .budget-slider:focus{outline:none}
   .budget-slider-wrap{position:relative}
-  .budget-target-marker{position:absolute;top:-8px;height:120px;border-left:2px dashed var(--dark-blue);transform:translateX(-1px);pointer-events:none;z-index:3}
+  .budget-target-marker{position:absolute;top:-8px;height:36px;border-left:2px dashed var(--dark-blue);transform:translateX(-1px);pointer-events:none;z-index:3}
   .budget-target-marker span{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--dark-blue);color:#fff;font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:3px;white-space:nowrap}
 
   .table-scroll{overflow-x:auto;border:var(--hair);border-radius:var(--radius)}
@@ -97,6 +98,7 @@
   table.monthly tbody td{padding:11px 14px;text-align:right;border-top:var(--hair);color:var(--dark-blue);font-variant-numeric:tabular-nums}
   table.monthly tbody td:first-child{text-align:left;font-weight:700;color:var(--slate)}
   table.monthly tbody tr:nth-child(even){background:var(--frost)}
+  table.monthly td.hl,table.monthly th.hl{font-weight:700}
   table.monthly tfoot td{padding:12px 14px;text-align:right;font-weight:900;color:var(--obx-blue);
     border-top:2px solid var(--obx-blue);font-variant-numeric:tabular-nums;background:var(--white)}
   table.monthly tfoot td:first-child{text-align:left;color:var(--dark-blue)}
@@ -258,9 +260,16 @@
         <input type="range" id="budget-slider" class="budget-slider" step="1000" aria-label="Monthly budget" />
         <div class="budget-target-marker" id="budget-marker"><span>Target</span></div>
       </div>
-      <div class="range-figures two">
+      <div class="range-figures three">
         <div class="range-fig target"><div class="lbl">Monthly budget</div><div class="amt" id="b-budget">$0</div></div>
         <div class="range-fig high"><div class="lbl">Projected monthly return</div><div class="amt" id="b-target">+$0</div></div>
+        <div class="range-fig low"><div class="lbl">Transactions / Leads</div><div class="amt" id="b-leads">0</div></div>
+      </div>
+    </div>
+    <div class="range-wrap reveal" style="margin-top:18px">
+      <div class="range-figures two">
+        <div class="range-fig target"><div class="lbl">Average Monthly Revenue</div><div class="amt" id="b-avgrev">$0</div></div>
+        <div class="range-fig high"><div class="lbl">Percentage Increase</div><div class="amt" id="b-pctinc">+0%</div></div>
       </div>
     </div>
   </div>
@@ -269,7 +278,7 @@
 <section class="statband">
   <div class="wrap">
     <p class="eyebrow">Projected Monthly Revenue</p>
-    <h2 class="section-title">With SEO versus standing still</h2>
+    <h2 class="section-title">Estimated Monthly Progression</h2>
     <p class="section-lede">Seasonality-adjusted monthly organic revenue across the engagement. The shaded band is the incremental revenue the work generates each month.</p>
     <div class="chart-card reveal">
       <div class="chart-head">
@@ -293,12 +302,12 @@
 <section>
   <div class="wrap">
     <p class="eyebrow">Month by Month</p>
-    <h2 class="section-title">The full projection</h2>
+    <h2 class="section-title">Monthly Sessions, Transactions/Leads &amp; Revenue</h2>
     <p class="section-lede">Leads and revenue build as optimization ramps in and are shaped by each month's seasonality.</p>
     <div class="table-scroll reveal">
       <table class="monthly" id="monthly-table">
         <thead>
-          <tr><th>Month</th><th>Seasonality</th><th>Sessions</th><th>Leads</th><th>Revenue (with SEO)</th><th>Revenue (baseline)</th><th>Monthly gain</th></tr>
+          <tr><th>Month</th><th>Sessions</th><th>Transactions/Leads</th><th class="hl">Revenue (with SEO)</th><th>Revenue (baseline)</th><th class="hl">Monthly gain</th></tr>
         </thead>
         <tbody></tbody>
         <tfoot></tfoot>
@@ -532,9 +541,11 @@ function computeDerived(raw){
   const bud=Number(d.monthlyBudget)||0, bmin=Number(d.budgetMin)||0, bmax=Number(d.budgetMax)||0;
   d.lowBand  = bud>0 ? 0.75*((bud-bmin)/bud) : 0;
   d.highBand = bud>0 ? 0.50*((bmax-bud)/bud) : 0;
-  d.range = { lowBand:d.lowBand, highBand:d.highBand, target:(r.revenue - c.revenue) };
+  d.range = { lowBand:d.lowBand, highBand:d.highBand, target:(r.revenue) };
   d.range.low  = d.range.target*(1-d.lowBand);
   d.range.high = d.range.target*(1+d.highBand);
+  d.avgMonthlyRevenue = (c.revenue||0) + (r.revenue||0);
+  d.pctIncrease = c.revenue>0 ? (r.revenue/c.revenue) : 0;
   return d;
 }
 
@@ -558,7 +569,7 @@ function populateCopy(){
   setTxt("r-low", plusUsd(DATA.range.low));
   setTxt("r-target", plusUsd(DATA.range.target));
   setTxt("r-high", plusUsd(DATA.range.high));
-  setTxt("range-lede", `Projected additional monthly organic revenue \u2014 the Post-Optimization Ranked Keywords value minus current performance \u2014 shown as a low / target / high range. Drag the budget slider below to explore scenarios.`);
+  setTxt("range-lede", `Projected additional monthly organic revenue \u2014 the Post-Optimization Ranked Keywords value \u2014 shown as a low / target / high range. Drag the budget slider below to explore scenarios.`);
 }
 
 /* ---- charts -------------------------------------------------------------- */
@@ -651,7 +662,12 @@ function buildBudgetSection(){
   bud=Math.min(max,Math.max(min,bud));
   sl.min=min; sl.max=max; sl.step=1000; sl.value=bud;
   setTxt("b-budget", usd(bud));
-  setTxt("b-target", plusUsd(budgetReturn(bud)));
+  const ret0=budgetReturn(bud); setTxt("b-target", plusUsd(ret0));
+  const tgt0=DATA.range.target||0, f0=(tgt0!==0)?ret0/tgt0:1;
+  setTxt("b-leads", Math.round((DATA.ranked.leads||0)*f0).toLocaleString("en-US"));
+  const cur0=Number(DATA.current.revenue)||0;
+  setTxt("b-avgrev", usd(ret0 + cur0));
+  setTxt("b-pctinc", "+" + pct1(cur0>0 ? ret0/cur0 : 0));
   const mk=document.getElementById("budget-marker");
   if(mk){ const frac=(max>min)?(bud-min)/(max-min):0.5; mk.style.left=(frac*100)+"%"; }
 }
@@ -665,10 +681,10 @@ function buildMonthKey(){
 function buildTable(){
   const tb=document.querySelector("#monthly-table tbody");
   tb.innerHTML = DATA.months.map((m,i)=>
-    `<tr><td>${m}</td><td>${(DATA.seasonality[i]*100).toFixed(1)}%</td><td>${num(DATA.sessions[i])}</td><td>${num(DATA.leads[i])}</td>`+
-    `<td>${usd2(DATA.revenue[i])}</td><td>${usd2(DATA.baseline[i])}</td><td>${usd2(DATA.gain[i])}</td></tr>`).join("");
+    `<tr><td>${m}</td><td>${num(DATA.sessions[i])}</td><td>${num(DATA.leads[i])}</td>`+
+    `<td class="hl">${usd2(DATA.revenue[i])}</td><td>${usd2(DATA.baseline[i])}</td><td class="hl">${usd2(DATA.gain[i])}</td></tr>`).join("");
   document.querySelector("#monthly-table tfoot").innerHTML =
-    `<tr><td>Total</td><td></td><td>${num(DATA.totals.sessions)}</td><td>${num(DATA.totals.leads)}</td>`+
+    `<tr><td>Total</td><td>${num(DATA.totals.sessions)}</td><td>${num(DATA.totals.leads)}</td>`+
     `<td>${usd2(DATA.totals.revenue)}</td><td>${usd2(DATA.totals.baseline)}</td><td>${usd2(DATA.totals.gain)}</td></tr>`;
 }
 
@@ -893,8 +909,14 @@ function wireEditor(){
   const slider=document.getElementById("budget-slider");
   if(slider) slider.addEventListener("input",e=>{
     const v=Number(e.target.value)||0;
+    const ret=budgetReturn(v);
     setTxt("b-budget", usd(v));
-    setTxt("b-target", plusUsd(budgetReturn(v)));
+    setTxt("b-target", plusUsd(ret));
+    const tgt=DATA.range.target||0, fac=(tgt!==0)?ret/tgt:1;
+    setTxt("b-leads", Math.round((DATA.ranked.leads||0)*fac).toLocaleString("en-US"));
+    const cur=Number(DATA.current.revenue)||0;
+    setTxt("b-avgrev", usd(ret + cur));
+    setTxt("b-pctinc", "+" + pct1(cur>0 ? ret/cur : 0));
   });
   const kwtb=document.querySelector("#kw-table tbody");
   document.getElementById("kw-load").addEventListener("click",()=>{
